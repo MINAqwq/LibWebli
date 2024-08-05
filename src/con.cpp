@@ -8,10 +8,10 @@
 namespace W {
 Con::Con(int sd, SSL_CTX *ctx) : sd(sd), ssl(SSL_new(ctx)) {
   SSL_set_fd(this->ssl, this->sd);
-  if (SSL_accept(this->ssl)) {
+  if (SSL_accept(this->ssl) != 1) {
     ERR_print_errors_fp(stderr);
     // TODO: throw exception
-    std::exit(1);
+    std::exit(2);
   }
 }
 

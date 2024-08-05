@@ -2,6 +2,7 @@
 
 #include <arpa/inet.h>
 #include <cstdlib>
+#include <iostream>
 #include <openssl/err.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -57,13 +58,13 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
   }
 
   // we reuse the memory place of our sockaddr structure later
-  memset(&addr, 0, sizeof(addr));
-
   while (running) {
+    memset(&addr, 0, sizeof(addr));
+    client_addr_len = 0;
     client_sd = ::accept(this->sd, reinterpret_cast<struct sockaddr *>(&addr),
                          &client_addr_len);
     if (client_sd == -1) {
-      perror("Accept");
+      perror("[Webli] Accept");
       continue;
     }
 
@@ -72,6 +73,7 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
 };
 
 void Server::handle_con(std::shared_ptr<Con> con) {
+  std::cerr << "writing stuff yeah\n";
   con->write((void *)"Deine Mama\n", 11);
 }
 } // namespace W

@@ -1,2 +1,7 @@
 build
+key.pem
+cert.pem
+test.cpp
+*.o
+*.out
 
