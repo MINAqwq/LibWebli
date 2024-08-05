@@ -3,7 +3,6 @@
 #include <webli/con.hpp>
 #include <webli/exceptions.hpp>
 
-#include <iostream>
 #include <openssl/err.h>
 #include <unistd.h>
 

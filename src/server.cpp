@@ -1,11 +1,11 @@
 // Copyright 2024 Mina
 
 #include <arpa/inet.h>
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <array>
 #include <openssl/err.h>
 #include <sys/socket.h>
 #include <thread>

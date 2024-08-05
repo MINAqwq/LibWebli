@@ -10,7 +10,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(webli SHARED
 	src/con.cpp
-	src/server.cpp	
+	src/http.cpp
+	src/server.cpp
 )
 
 target_include_directories(webli PRIVATE ./include ./dep/include/json/include)
