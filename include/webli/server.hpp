@@ -5,7 +5,6 @@
 #include <webli/con.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <openssl/ssl.h>
 #include <string_view>
 
@@ -19,7 +18,7 @@ public:
 
   void listen(std::string_view interface, std::uint16_t port);
 
-  static void handle_con(std::shared_ptr<Con> con);
+  static void handle_con(int client_sd, SSL_CTX *ctx);
 
 private:
   int sd;

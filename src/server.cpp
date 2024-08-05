@@ -2,10 +2,16 @@
 
 #include <arpa/inet.h>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <memory>
+#include <array>
 #include <openssl/err.h>
 #include <sys/socket.h>
+#include <thread>
 #include <unistd.h>
+
+#include <webli/exceptions.hpp>
 #include <webli/server.hpp>
 
 namespace W {
@@ -47,7 +53,7 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = htonl(inet_addr(interface.data()));
+  addr.sin_addr.s_addr = inet_addr(interface.data());
 
   if (bind(this->sd, reinterpret_cast<struct sockaddr *>(&addr),
            sizeof(addr)) != 0 ||
@@ -57,10 +63,11 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
     __builtin_unreachable();
   }
 
+  std::memset(&addr, 0, sizeof(addr));
+  client_addr_len = 0;
+
   // we reuse the memory place of our sockaddr structure later
   while (running) {
-    memset(&addr, 0, sizeof(addr));
-    client_addr_len = 0;
     client_sd = ::accept(this->sd, reinterpret_cast<struct sockaddr *>(&addr),
                          &client_addr_len);
     if (client_sd == -1) {
@@ -68,12 +75,21 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
       continue;
     }
 
-    Server::handle_con(std::make_shared<Con>(client_sd, this->ctx));
+    auto t = std::thread(Server::handle_con, client_sd, this->ctx);
+    t.detach();
   }
-};
+}
 
-void Server::handle_con(std::shared_ptr<Con> con) {
-  std::cerr << "writing stuff yeah\n";
-  con->write((void *)"Deine Mama\n", 11);
+void Server::handle_con(int client_sd, SSL_CTX *ctx) {
+  std::array<std::uint8_t, 2048> buffer;
+  std::memset(&buffer, 0, buffer.size());
+
+  try {
+    auto con = std::make_shared<Con>(client_sd, ctx);
+    con->read(&buffer, 2048);
+    con->write((void *)"Deine Mama\n", 11);
+  } catch (Exception &e) {
+    std::cerr << e.getMessage() << "\n";
+  }
 }
 } // namespace W
