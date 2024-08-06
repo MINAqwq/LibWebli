@@ -13,6 +13,8 @@ This is the library powering the same named web framework (in work). LibWebli pr
 
 ## TODO
 
+- [ ] GET Parameter
+- [ ] Dynamic Routes (e.g. /user/:id)
 - [ ] JSON Integration (nlohmann?)
 - [ ] HTTP Client API (like fetch in javascript)
 - [ ] .env Parser/Loader
