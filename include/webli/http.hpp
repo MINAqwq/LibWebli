@@ -87,6 +87,8 @@ static constexpr const char *UserAgent = "User-Agent";
 class Object {
 public:
   Object() = default;
+  Object(std::unordered_map<std::string, std::string> header,
+         const std::string &body, const std::string &version = "HTTP/1.1");
   ~Object() = default;
 
   std::string_view getHeader(const std::string &key) const noexcept;
@@ -111,7 +113,7 @@ protected:
 
   std::unordered_map<std::string, std::string> header;
   std::string body;
-  std::string version;
+  std::string version{"HTTP/1.1"};
 };
 
 class Request : public Object {
@@ -140,6 +142,9 @@ private:
 class Response : public Object {
 public:
   Response();
+  Response(StatusCode status_code,
+           std::unordered_map<std::string, std::string> header,
+           const std::string &body, const std::string &version = "HTTP/1.1");
   Response(std::stringstream &data);
   ~Response() = default;
 
