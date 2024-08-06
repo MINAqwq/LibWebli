@@ -11,6 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(webli SHARED
 	src/con.cpp
 	src/http.cpp
+	src/router.cpp
 	src/server.cpp
 )
 

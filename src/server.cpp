@@ -1,5 +1,6 @@
 // Copyright 2024 Mina
 
+#include "webli/router.hpp"
 #include <arpa/inet.h>
 #include <array>
 #include <cstdlib>
@@ -17,8 +18,8 @@
 #include <webli/server.hpp>
 
 namespace W {
-Server::Server()
-    : sd(socket(AF_INET, SOCK_STREAM, 0)),
+Server::Server(const Router &router)
+    : sd(socket(AF_INET, SOCK_STREAM, 0)), router(router),
       ctx(SSL_CTX_new(TLS_server_method())) {
   if ((this->sd == -1) || (!(this->ctx))) {
     perror("[Webli] Server");
@@ -77,12 +78,13 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
       continue;
     }
 
-    auto t = std::thread(Server::handle_con, client_sd, this->ctx);
+    auto t =
+        std::thread(Server::handle_con, client_sd, this->ctx, this->router);
     t.detach();
   }
 }
 
-void Server::handle_con(int client_sd, SSL_CTX *ctx) {
+void Server::handle_con(int client_sd, SSL_CTX *ctx, const Router &router) {
   auto buffer = std::make_unique<std::array<std::uint8_t, 2024>>();
   std::stringstream stream{};
 
@@ -93,17 +95,21 @@ void Server::handle_con(int client_sd, SSL_CTX *ctx) {
     stream.write(reinterpret_cast<char *>(buffer->data()), buffer->size());
     buffer.reset();
 
-    Http::Request req{stream};
+    Http::Request req_buffer{stream};
 
-    Http::Response resp{};
-    resp.setStatusCode(Http::StatusCode::Ok);
-    resp.setVersion("HTTP/1.1");
-    resp.setHeader("Server", "Deine Mama");
-    resp.setHeader("Content-Type", "text/html");
-    resp.setBody("<h1>Hello Webli</h1>\n");
+    auto resp_buffer = std::make_shared<Http::Response>();
 
-    auto resp_str = resp.build();
+    try {
+      auto handler_vec =
+          router.getHandler(req_buffer.getMethod(), req_buffer.getPath());
+      for (const auto &handler : handler_vec) {
+        handler(req_buffer, resp_buffer);
+      }
+    } catch (WebException::HttpException &e) {
+      *resp_buffer = e.getResponse();
+    }
 
+    auto resp_str = resp_buffer->build();
     con->write((void *)resp_str.c_str(), resp_str.size());
   } catch (Exception &e) {
     std::cerr << e.getMessage() << "\n";
