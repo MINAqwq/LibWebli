@@ -84,12 +84,24 @@ static constexpr const char *Host = "Host";
 static constexpr const char *UserAgent = "User-Agent";
 } // namespace Header
 
+struct StringHash {
+  using is_transparent = void;
+
+  std::size_t operator()(std::string_view sv) const {
+    std::hash<std::string_view> hasher;
+    return hasher(sv);
+  }
+};
+
+using StringMap =
+    std::unordered_map<std::string, std::string, StringHash, std::equal_to<>>;
+
 class Object {
 public:
   Object() = default;
-  Object(std::unordered_map<std::string, std::string> header,
-         const std::string &body, const std::string &version = "HTTP/1.1");
-  ~Object() = default;
+  Object(const Http::StringMap &header, const std::string &body,
+         const std::string &version = "HTTP/1.1");
+  virtual ~Object() = default;
 
   std::string_view getHeader(const std::string &key) const noexcept;
 
@@ -109,9 +121,9 @@ protected:
   void parse(std::stringstream &data);
   virtual void parseFirstLine(std::stringstream &data) = 0;
   void parseHeader(std::stringstream &data);
-  void parseBody(std::stringstream &data);
+  void parseBody(const std::stringstream &data);
 
-  std::unordered_map<std::string, std::string> header;
+  StringMap header;
   std::string body;
   std::string version{"HTTP/1.1"};
 };
@@ -119,8 +131,8 @@ protected:
 class Request : public Object {
 public:
   Request();
-  Request(std::stringstream &data);
-  ~Request() = default;
+  explicit Request(std::stringstream &data);
+  ~Request() override = default;
 
   const std::string &getMethod() const noexcept;
 
@@ -142,11 +154,10 @@ private:
 class Response : public Object {
 public:
   Response();
-  Response(StatusCode status_code,
-           std::unordered_map<std::string, std::string> header,
+  Response(StatusCode status_code, Http::StringMap header,
            const std::string &body, const std::string &version = "HTTP/1.1");
-  Response(std::stringstream &data);
-  ~Response() = default;
+  explicit Response(std::stringstream &data);
+  ~Response() override = default;
 
   StatusCode getStatusCode() const noexcept;
 

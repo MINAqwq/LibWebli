@@ -78,18 +78,17 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
       continue;
     }
 
-    auto t =
-        std::thread(Server::handle_con, client_sd, this->ctx, this->router);
+    auto t = std::jthread(Server::handle_con, client_sd, this);
     t.detach();
   }
 }
 
-void Server::handle_con(int client_sd, SSL_CTX *ctx, const Router &router) {
+void Server::handle_con(int client_sd, Server *server) {
   auto buffer = std::make_unique<std::array<std::uint8_t, 2024>>();
   std::stringstream stream{};
 
   try {
-    auto con = std::make_shared<Con>(client_sd, ctx);
+    auto con = std::make_shared<Con>(client_sd, server->ctx);
 
     con->read(buffer->data(), 2048);
     stream.write(reinterpret_cast<char *>(buffer->data()), buffer->size());
@@ -101,8 +100,8 @@ void Server::handle_con(int client_sd, SSL_CTX *ctx, const Router &router) {
     resp_buffer->setStatusCode(Http::StatusCode::Ok);
 
     try {
-      auto handler_vec =
-          router.getHandler(req_buffer.getMethod(), req_buffer.getPath());
+      const auto &handler_vec = server->router.getHandler(
+          req_buffer.getMethod(), req_buffer.getPath());
       for (const auto &handler : handler_vec) {
         handler(req_buffer, resp_buffer);
       }
@@ -112,6 +111,12 @@ void Server::handle_con(int client_sd, SSL_CTX *ctx, const Router &router) {
 
     auto resp_str = resp_buffer->build();
     con->write((void *)resp_str.c_str(), resp_str.size());
+
+    std::lock_guard guard(server->print_lock);
+    std::cerr << req_buffer.getMethod() << "\t"
+              << static_cast<int>(resp_buffer->getStatusCode()) << " | "
+              << req_buffer.getPath() << "\n";
+
   } catch (Exception &e) {
     std::cerr << e.getMessage() << "\n";
   }

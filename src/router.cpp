@@ -1,6 +1,7 @@
-#include "webli/exceptions.hpp"
-#include <string>
+#include <webli/exceptions.hpp>
 #include <webli/router.hpp>
+
+#include <string>
 
 namespace W {
 void Router::get(std::string_view route, HttpUserHandler handler) {

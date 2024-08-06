@@ -23,8 +23,8 @@ private:
 namespace WebException {
 class HttpException {
 public:
-  HttpException() {}
-  HttpException(const Http::Response &resp) : resp(resp) {}
+  HttpException() = default;
+  explicit HttpException(const Http::Response &resp) : resp(resp) {}
 
   Http::Response &getResponse() { return resp; }
 
@@ -52,7 +52,7 @@ class FromStorage : public HttpException {
 public:
   FromStorage(std::string_view path, const std::string &type,
               Http::StatusCode status_code = Http::StatusCode::Ok,
-              std::unordered_map<std::string, std::string> header = {})
+              const Http::StringMap &header = {})
       : HttpException(
             Http::Response(status_code, header, Storage::loadAsString(path))) {
     this->resp.setHeader(Http::Header::ContentType, type);

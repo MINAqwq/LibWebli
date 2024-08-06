@@ -45,7 +45,9 @@ public:
                                                  std::string_view route) const;
 
 private:
-  std::unordered_map<std::string, std::vector<HttpUserHandler>> map;
+  std::unordered_map<std::string, std::vector<HttpUserHandler>,
+                     Http::StringHash, std::equal_to<>>
+      map;
 };
 
 } // namespace W

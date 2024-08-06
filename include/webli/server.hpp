@@ -19,12 +19,13 @@ public:
 
   void listen(std::string_view interface, std::uint16_t port);
 
-  static void handle_con(int client_sd, SSL_CTX *ctx, const Router &router);
+  static void handle_con(int client_sd, Server *server);
 
 private:
   int sd;
   bool running{true};
   Router router;
   SSL_CTX *ctx;
+  std::mutex print_lock;
 };
 } // namespace W

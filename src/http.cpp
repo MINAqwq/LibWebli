@@ -139,9 +139,9 @@ std::string StatusCodeToString(StatusCode code) {
   }
 }
 
-Object::Object(std::unordered_map<std::string, std::string> header,
-               const std::string &body, const std::string &version)
-    : version(version), header(header) {
+Object::Object(const Http::StringMap &header, const std::string &body,
+               const std::string &version)
+    : header(header), version(version) {
   // use setter to set content length
   this->setBody(body);
 }
@@ -200,14 +200,15 @@ void Object::parseHeader(std::stringstream &data) {
   }
 }
 
-void Object::parseBody(std::stringstream &data) { this->body = data.str(); }
+void Object::parseBody(const std::stringstream &data) {
+  this->body = data.str();
+}
 
 Request::Request() : Object() {}
 
-Response::Response(StatusCode status_code,
-                   std::unordered_map<std::string, std::string> header,
+Response::Response(StatusCode status_code, Http::StringMap header,
                    const std::string &body, const std::string &version)
-    : status_code(status_code), Object(header, body, version) {}
+    : Object(header, body, version), status_code(status_code) {}
 
 Request::Request(std::stringstream &data) : Object() {
   this->parseFirstLine(data);
