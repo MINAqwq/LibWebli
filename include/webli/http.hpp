@@ -73,6 +73,8 @@ enum class StatusCode {
   NetworkAuthenticationRequired
 };
 
+std::string StatusCodeToString(StatusCode code);
+
 namespace Header {
 static constexpr const char *Cookie = "Cookie";
 static constexpr const char *Connection = "Connection";
@@ -141,7 +143,9 @@ public:
   Response(std::stringstream &data);
   ~Response() = default;
 
-  StatusCode getStatusCode();
+  StatusCode getStatusCode() const noexcept;
+
+  void setStatusCode(StatusCode code) noexcept;
 
   std::string build() const noexcept final;
 

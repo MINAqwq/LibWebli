@@ -7,11 +7,13 @@
 #include <iostream>
 #include <memory>
 #include <openssl/err.h>
+#include <sstream>
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
 
 #include <webli/exceptions.hpp>
+#include <webli/http.hpp>
 #include <webli/server.hpp>
 
 namespace W {
@@ -81,13 +83,28 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
 }
 
 void Server::handle_con(int client_sd, SSL_CTX *ctx) {
-  std::array<std::uint8_t, 2048> buffer;
-  std::memset(&buffer, 0, buffer.size());
+  auto buffer = std::make_unique<std::array<std::uint8_t, 2024>>();
+  std::stringstream stream{};
 
   try {
     auto con = std::make_shared<Con>(client_sd, ctx);
-    con->read(&buffer, 2048);
-    con->write((void *)"Deine Mama\n", 11);
+
+    con->read(buffer->data(), 2048);
+    stream.write(reinterpret_cast<char *>(buffer->data()), buffer->size());
+    buffer.reset();
+
+    Http::Request req{stream};
+
+    Http::Response resp{};
+    resp.setStatusCode(Http::StatusCode::Ok);
+    resp.setVersion("HTTP/1.1");
+    resp.setHeader("Server", "Deine Mama");
+    resp.setHeader("Content-Type", "text/html");
+    resp.setBody("<h1>Hello Webli</h1>\n");
+
+    auto resp_str = resp.build();
+
+    con->write((void *)resp_str.c_str(), resp_str.size());
   } catch (Exception &e) {
     std::cerr << e.getMessage() << "\n";
   }
