@@ -1,12 +1,12 @@
 # LibWebli
 
-This is the library powering the same named web framework. LibWebli provides subroutines for hosting, connection handling and runtime exceptions. Made with the goal to make api programming in C++ less painful. But ofcourse you can use it however you want.
+This is the library powering the same named web framework (in work). LibWebli provides subroutines for hosting, connection handling, runtime exceptions and more. Made with the goal to make api programming in C++ less painful. But of course you can use it however you want.
 
 
 ## Dependencies
 
 - Libc
-- STL
+- STL (C++20)
 - BSD/Posix Sockets
 - OpenSSL
 
@@ -17,7 +17,9 @@ This is the library powering the same named web framework. LibWebli provides sub
 - [ ] HTTP Client API (like fetch in javascript)
 - [ ] .env Parser/Loader
 
+
 ## Examples
+
 
 ### Server with 2 routes + auth guard
 
@@ -93,6 +95,7 @@ int main() {
   // define routes and start server
 }
 ```
+
 
 ### Load response content from storage
 
