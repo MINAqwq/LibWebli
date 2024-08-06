@@ -98,6 +98,7 @@ void Server::handle_con(int client_sd, SSL_CTX *ctx, const Router &router) {
     Http::Request req_buffer{stream};
 
     auto resp_buffer = std::make_shared<Http::Response>();
+    resp_buffer->setStatusCode(Http::StatusCode::Ok);
 
     try {
       auto handler_vec =
