@@ -16,5 +16,7 @@ add_library(webli SHARED
 	src/storage.cpp
 )
 
-target_include_directories(webli PRIVATE ./include ./dep/include/json/include)
+target_include_directories(webli PRIVATE ./include)
+
+target_link_libraries(webli PUBLIC ssl crypto)
 
