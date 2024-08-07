@@ -5,4 +5,5 @@ cert.pem
 test.cpp
 *.o
 *.out
-
+settings.json
+doxygen

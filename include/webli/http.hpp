@@ -8,6 +8,10 @@
 #include <unordered_map>
 
 namespace W::Http {
+/**
+ * @brief HTTP Status Codes
+ *
+ */
 enum class StatusCode {
   Continue = 100,
   SwitchingProtocol,
@@ -73,6 +77,12 @@ enum class StatusCode {
   NetworkAuthenticationRequired
 };
 
+/**
+ * @brief get the name of a numeric status code as string
+ *
+ * @param code http status code
+ * @return std::string
+ */
 std::string StatusCodeToString(StatusCode code);
 
 namespace Header {
@@ -84,6 +94,10 @@ static constexpr const char *Host = "Host";
 static constexpr const char *UserAgent = "User-Agent";
 } // namespace Header
 
+/**
+ * @brief Transparent string hasher
+ *
+ */
 struct StringHash {
   using is_transparent = void;
 
@@ -93,85 +107,291 @@ struct StringHash {
   }
 };
 
+/**
+ * @brief Typedef for unordered string map with transparent custom hasher
+ *
+ */
 using StringMap =
     std::unordered_map<std::string, std::string, StringHash, std::equal_to<>>;
 
+/**
+ * @brief get the position of the '?' in an http path
+ *
+ * @param path http path
+ * @return std::size_t (std::string::npos if not found)
+ */
 std::size_t findGetParameter(std::string_view path) noexcept;
 
+/**
+ * @brief modify a path
+ *
+ * @param http_path
+ * @return StringMap
+ */
 StringMap extractGetParameter(std::string_view http_path) noexcept;
 
+/**
+ * @brief Base HTTP Object
+ *
+ */
 class Object {
 public:
+  /**
+   * @brief Construct a new empty HTTP Object
+   *
+   */
   Object() = default;
+
+  /**
+   * @brief Construct a new HTTP Object based on the parameter
+   *
+   * @param header http header
+   * @param body http body
+   * @param version http version
+   */
   Object(const Http::StringMap &header, const std::string &body,
          const std::string &version = "HTTP/1.1");
+
+  /**
+   * @brief Destroy the HTTP Object
+   *
+   */
   virtual ~Object() = default;
 
+  /**
+   * @brief Get the HTTP header
+   *
+   * @param key name the value is saved under
+   * @return std::string_view
+   */
   std::string_view getHeader(const std::string &key) const noexcept;
 
+  /**
+   * @brief Get the HTTP body
+   *
+   * @return const std::string&
+   */
   const std::string &getBody() const noexcept;
 
+  /**
+   * @brief Get the HTTP version
+   *
+   * @return const std::string&
+   */
   const std::string &getVersion() const noexcept;
 
+  /**
+   * @brief Set a value in the HTTP header
+   *
+   * @param key value name
+   * @param value actual value
+   */
   void setHeader(const std::string &key, const std::string &value) noexcept;
 
+  /**
+   * @brief Set the HTTP body and the Content-Length field
+   *
+   * @param data http body data (text only)
+   */
   void setBody(const std::string &data) noexcept;
 
+  /**
+   * @brief Set the HTTP version
+   *
+   * @param version http version
+   */
   void setVersion(const std::string &version) noexcept;
 
+  /**
+   * @brief build the http object to a string
+   *
+   * @return http object as std::string
+   */
   virtual std::string build() const noexcept = 0;
 
 protected:
+  /**
+   * @brief parse http header and then the body
+   *
+   * @param data http string stream
+   */
   void parse(std::stringstream &data);
+
+  /**
+   * @brief read and parse the first line on the http stream
+   *
+   * @param data http string stream
+   */
   virtual void parseFirstLine(std::stringstream &data) = 0;
+
+  /**
+   * @brief read and parse the http header from the stream
+   *
+   * @param data http string stream
+   * @throws W::Exception on failure
+   */
   void parseHeader(std::stringstream &data);
+
+  /**
+   * @brief read and parse the http body from the stream
+   *
+   * @param data http string stream
+   */
   void parseBody(const std::stringstream &data);
 
+  /** @brief http header */
   StringMap header;
+
+  /** @brief http body */
   std::string body;
+
+  /** @brief http version */
   std::string version{"HTTP/1.1"};
 };
 
+/**
+ * @brief HTTP Request
+ *
+ */
 class Request : public Object {
 public:
+  /**
+   * @brief Construct a new empty HTTP Request
+   *
+   */
   Request();
+
+  /**
+   * @brief Construct a new HTTP Request  based on the input data
+   *
+   * @param data http string stream
+   * @throws W::Exception on failure
+   */
   explicit Request(std::stringstream &data);
+
+  /**
+   * @brief Destroy the Request object
+   *
+   */
   ~Request() override = default;
 
+  /**
+   * @brief Get the Request Method
+   *
+   * @return const std::string&
+   */
   const std::string &getMethod() const noexcept;
 
+  /**
+   * @brief Get the Request Path
+   *
+   * @return const std::string&
+   */
   const std::string &getPath() const noexcept;
 
+  /**
+   * @brief Set the Request Method
+   *
+   * @param method http request method
+   */
   void setMethod(const std::string &method) noexcept;
 
+  /**
+   * @brief Set the Request Path
+   *
+   * @param path http request path
+   */
   void setPath(const std::string &path) noexcept;
 
+  /**
+   * @brief build the http request to a string
+   *
+   * @return http request as std::string
+   */
   std::string build() const noexcept final;
 
 private:
+  /**
+   * @brief read and parse the first line on the http stream
+   *
+   * @param data http string stream
+   */
   void parseFirstLine(std::stringstream &data) final;
 
+  /** @brief http request method */
   std::string method;
+
+  /** @brief http request path */
   std::string path;
 };
 
+/**
+ * @brief HTTP Response
+ *
+ */
 class Response : public Object {
 public:
+  /**
+   * @brief Construct a new HTTP Response
+   *
+   */
   Response();
+
+  /**
+   * @brief Construct a new HTTP Response based on the parameter
+   *
+   * @param status_code http status code
+   * @param header http header
+   * @param body http body
+   * @param version http version
+   */
   Response(StatusCode status_code, Http::StringMap header,
            const std::string &body, const std::string &version = "HTTP/1.1");
+
+  /**
+   * @brief Construct a new HTTP Response based on the input data
+   *
+   * @param data http string stream
+   * @throws W::Exception on failure
+   */
   explicit Response(std::stringstream &data);
+
+  /**
+   * @brief Destroy the Response object
+   *
+   */
   ~Response() override = default;
 
+  /**
+   * @brief Get the Response Status Code
+   *
+   * @return StatusCode
+   */
   StatusCode getStatusCode() const noexcept;
 
+  /**
+   * @brief Set the Response Status Code
+   *
+   * @param code http status code
+   */
   void setStatusCode(StatusCode code) noexcept;
 
+  /**
+   * @brief build the http response to a string
+   *
+   * @return http request as std::string
+   */
   std::string build() const noexcept final;
 
 private:
+  /**
+   * @brief read and parse the first line on the http stream
+   *
+   * @param data http string stream
+   */
   void parseFirstLine(std::stringstream &data) final;
 
+  /** @brief http status code */
   StatusCode status_code;
 };
 
