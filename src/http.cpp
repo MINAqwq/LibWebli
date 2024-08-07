@@ -139,6 +139,49 @@ std::string StatusCodeToString(StatusCode code) {
   }
 }
 
+std::size_t findGetParameter(std::string_view path) noexcept {
+  return path.find_first_of('?');
+}
+
+StringMap extractGetParameter(std::string_view path) noexcept {
+  StringMap get_parameter;
+
+  auto pos = findGetParameter(path);
+  if (pos == std::string::npos) {
+    return get_parameter;
+  }
+  pos++;
+
+  path.remove_prefix(pos);
+
+  while (!path.empty()) {
+    auto param_end = path.find_first_of('=');
+    if (param_end == std::string::npos || param_end == 0) {
+      return {};
+    }
+
+    auto key = path.substr(0, param_end);
+
+    ++param_end;
+    if (param_end >= path.size()) {
+      return {};
+    }
+
+    path.remove_prefix(param_end);
+
+    auto value_end = path.find_first_of('&');
+    if (value_end == std::string::npos) {
+      get_parameter[std::string(key)] = path.substr(0, path.size());
+      return get_parameter;
+    }
+
+    get_parameter[std::string(key)] = path.substr(0, value_end);
+    path.remove_prefix(value_end + 1);
+  }
+
+  return get_parameter;
+}
+
 Object::Object(const Http::StringMap &header, const std::string &body,
                const std::string &version)
     : header(header), version(version) {

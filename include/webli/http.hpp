@@ -96,6 +96,10 @@ struct StringHash {
 using StringMap =
     std::unordered_map<std::string, std::string, StringHash, std::equal_to<>>;
 
+std::size_t findGetParameter(std::string_view path) noexcept;
+
+StringMap extractGetParameter(std::string_view path) noexcept;
+
 class Object {
 public:
   Object() = default;
