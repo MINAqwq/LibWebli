@@ -98,7 +98,7 @@ using StringMap =
 
 std::size_t findGetParameter(std::string_view path) noexcept;
 
-StringMap extractGetParameter(std::string_view path) noexcept;
+StringMap extractGetParameter(std::string_view http_path) noexcept;
 
 class Object {
 public:

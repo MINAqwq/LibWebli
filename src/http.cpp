@@ -143,8 +143,11 @@ std::size_t findGetParameter(std::string_view path) noexcept {
   return path.find_first_of('?');
 }
 
-StringMap extractGetParameter(std::string_view path) noexcept {
+StringMap extractGetParameter(std::string_view http_path) noexcept {
   StringMap get_parameter;
+
+  // copy string view to avoid modifing the input
+  std::string_view path = http_path;
 
   auto pos = findGetParameter(path);
   if (pos == std::string::npos) {
