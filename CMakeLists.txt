@@ -8,6 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+add_subdirectory(dep/json)
+
 add_library(webli SHARED
 	src/con.cpp
 	src/http.cpp
@@ -16,7 +18,7 @@ add_library(webli SHARED
 	src/storage.cpp
 )
 
-target_include_directories(webli PRIVATE ./include)
+target_include_directories(webli PRIVATE ./include ./dep/json/include)
 
 target_link_libraries(webli PUBLIC ssl crypto)
 

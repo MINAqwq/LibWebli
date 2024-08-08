@@ -199,6 +199,14 @@ std::string_view Object::getHeader(const std::string &key) const noexcept {
 
 const std::string &Object::getBody() const noexcept { return this->body; }
 
+nlohmann::json Object::getBodyJSON() const noexcept {
+  try {
+    return nlohmann::json::parse(this->getBody());
+  } catch (nlohmann::json::parse_error &) {
+    return {};
+  }
+}
+
 const std::string &Object::getVersion() const noexcept { return this->version; }
 
 void Object::setHeader(const std::string &key,
@@ -212,6 +220,11 @@ void Object::setBody(const std::string &data) noexcept {
       : this->setHeader(Header::ContentLength, std::to_string(data.length()));
 
   this->body = data;
+}
+
+void Object::setBodyJson(const nlohmann::json &json) noexcept {
+  this->setBody(json.dump());
+  this->setHeader(Http::Header::ContentType, "application/json");
 }
 
 void Object::setVersion(const std::string &version) noexcept {

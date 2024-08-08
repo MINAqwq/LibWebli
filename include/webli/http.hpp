@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -174,6 +176,13 @@ public:
   const std::string &getBody() const noexcept;
 
   /**
+   * @brief Get the HTTP body as object.
+   *
+   * @return const nlohmann::json (empty on failure)
+   */
+  nlohmann::json getBodyJSON() const noexcept;
+
+  /**
    * @brief Get the HTTP version
    *
    * @return const std::string&
@@ -194,6 +203,13 @@ public:
    * @param data http body data (text only)
    */
   void setBody(const std::string &data) noexcept;
+
+  /**
+   * @brief Set the HTTP body, the Content-Length + Content-Type field
+   *
+   * @param json json data
+   */
+  void setBodyJson(const nlohmann::json &json) noexcept;
 
   /**
    * @brief Set the HTTP version
