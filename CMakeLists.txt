@@ -12,6 +12,7 @@ add_subdirectory(dep/json)
 
 add_library(webli SHARED
 	src/con.cpp
+	src/dotenv.cpp
 	src/http.cpp
 	src/router.cpp
 	src/server.cpp
