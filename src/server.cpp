@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <openssl/err.h>
+#include <signal.h>
 #include <sstream>
 #include <sys/socket.h>
 #include <thread>
@@ -18,6 +19,11 @@
 #include <webli/server.hpp>
 
 namespace W {
+void sigpipeHandler(int) {
+  // SIGPIPE gonna hate
+  return;
+}
+
 Server::Server(const Router &router)
     : sd(socket(AF_INET, SOCK_STREAM, 0)), router(router),
       ctx(SSL_CTX_new(TLS_server_method())) {
@@ -26,6 +32,9 @@ Server::Server(const Router &router)
     std::exit(EXIT_FAILURE);
     __builtin_unreachable();
   }
+
+  // thx to gam3b0y
+  signal(SIGPIPE, &sigpipeHandler);
 }
 
 Server::~Server() {
@@ -60,7 +69,7 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
 
   if (bind(this->sd, reinterpret_cast<struct sockaddr *>(&addr),
            sizeof(addr)) != 0 ||
-      ::listen(this->sd, 15) != 0) {
+      ::listen(this->sd, 35) != 0) {
     perror("[Webli] Server::listen");
     std::exit(EXIT_FAILURE);
     __builtin_unreachable();
