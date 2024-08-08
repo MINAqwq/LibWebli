@@ -43,7 +43,7 @@ public:
    * @param route http route
    * @param handler user handler function
    */
-  void get(std::string_view route, HttpUserHandler handler);
+  void get(std::string_view route, const HttpUserHandler &handler);
 
   /**
    * @brief register a new GET route with more than one handler
@@ -59,7 +59,7 @@ public:
    * @param route http route
    * @param handler user handler function
    */
-  void post(std::string_view route, HttpUserHandler handler);
+  void post(std::string_view route, const HttpUserHandler &handler);
 
   /**
    * @brief register a new POST route with more than one handler
@@ -76,7 +76,7 @@ public:
    * @param route http route
    * @param handler user handler function
    */
-  void put(std::string_view route, HttpUserHandler handler);
+  void put(std::string_view route, const HttpUserHandler &handler);
 
   /**
    * @brief register a new PUT route with more than one handler
@@ -92,7 +92,7 @@ public:
    * @param route http route
    * @param handler user handler function
    */
-  void patch(std::string_view route, HttpUserHandler handler);
+  void patch(std::string_view route, const HttpUserHandler &handler);
 
   /**
    * @brief register a new PATCH route with more than one handler
@@ -109,7 +109,7 @@ public:
    * @param route http route
    * @param handler user handler function
    */
-  void del(std::string_view route, HttpUserHandler handler);
+  void del(std::string_view route, const HttpUserHandler &handler);
 
   /**
    * @brief register a new DELETE route with more than one handler
@@ -127,7 +127,7 @@ public:
    * @param handler vector containing user handler functions
    */
   void custom(std::string_view method, std::string_view route,
-              HttpUserHandler handler);
+              const HttpUserHandler &handler);
 
   /**
    * @brief register a new route under a custom method with more than one

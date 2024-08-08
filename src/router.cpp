@@ -4,7 +4,7 @@
 #include <string>
 
 namespace W {
-void Router::get(std::string_view route, HttpUserHandler handler) {
+void Router::get(std::string_view route, const HttpUserHandler &handler) {
   this->custom("GET", route, handler);
 }
 
@@ -13,7 +13,7 @@ void Router::get(std::string_view route,
   this->custom("GET", route, handler);
 }
 
-void Router::post(std::string_view route, HttpUserHandler handler) {
+void Router::post(std::string_view route, const HttpUserHandler &handler) {
   this->custom("POST", route, handler);
 }
 
@@ -22,7 +22,7 @@ void Router::post(std::string_view route,
   this->custom("POST", route, handler);
 }
 
-void Router::put(std::string_view route, HttpUserHandler handler) {
+void Router::put(std::string_view route, const HttpUserHandler &handler) {
   this->custom("PUT", route, handler);
 }
 void Router::put(std::string_view route,
@@ -30,7 +30,7 @@ void Router::put(std::string_view route,
   this->custom("PUT", route, handler);
 }
 
-void Router::patch(std::string_view route, HttpUserHandler handler) {
+void Router::patch(std::string_view route, const HttpUserHandler &handler) {
   this->custom("PATCH", route, handler);
 }
 
@@ -39,7 +39,7 @@ void Router::patch(std::string_view route,
   this->custom("PATCH", route, handler);
 }
 
-void Router::del(std::string_view route, HttpUserHandler handler) {
+void Router::del(std::string_view route, const HttpUserHandler &handler) {
   this->custom("DELETE", route, handler);
 }
 
@@ -49,7 +49,7 @@ void Router::del(std::string_view route,
 }
 
 void Router::custom(std::string_view method, std::string_view route,
-                    HttpUserHandler handler) {
+                    const HttpUserHandler &handler) {
   this->map[std::string(method) + std::string(route)] = {handler};
 }
 
