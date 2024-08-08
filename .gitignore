@@ -7,3 +7,4 @@ test.cpp
 *.out
 settings.json
 doxygen
+.env
