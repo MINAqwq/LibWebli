@@ -180,7 +180,7 @@ public:
    *
    * @return const nlohmann::json (empty on failure)
    */
-  nlohmann::json getBodyJSON() const noexcept;
+  nlohmann::json getBodyJson() const noexcept;
 
   /**
    * @brief Get the HTTP version

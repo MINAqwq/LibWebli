@@ -199,7 +199,7 @@ std::string_view Object::getHeader(const std::string &key) const noexcept {
 
 const std::string &Object::getBody() const noexcept { return this->body; }
 
-nlohmann::json Object::getBodyJSON() const noexcept {
+nlohmann::json Object::getBodyJson() const noexcept {
   try {
     return nlohmann::json::parse(this->getBody());
   } catch (nlohmann::json::parse_error &) {
