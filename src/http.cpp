@@ -259,8 +259,8 @@ void Object::parseHeader(std::stringstream &data) {
   }
 }
 
-void Object::parseBody(const std::stringstream &data) {
-  this->body = data.str();
+void Object::parseBody(std::stringstream &data) {
+  std::getline(data, this->body);
 }
 
 Request::Request() : Object() {}

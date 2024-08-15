@@ -253,7 +253,7 @@ protected:
    *
    * @param data http string stream
    */
-  void parseBody(const std::stringstream &data);
+  void parseBody(std::stringstream &data);
 
   /** @brief http header */
   StringMap header;
