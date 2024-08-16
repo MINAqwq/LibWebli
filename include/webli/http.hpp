@@ -4,6 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <chrono>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -79,6 +80,40 @@ enum class StatusCode {
   NetworkAuthenticationRequired
 };
 
+namespace Header {
+static constexpr const char *Cookie = "Cookie";
+static constexpr const char *Connection = "Connection";
+static constexpr const char *ContentLength = "Content-Length";
+static constexpr const char *ContentType = "Content-Type";
+static constexpr const char *Host = "Host";
+static constexpr const char *SetCookie = "Set-Cookie";
+static constexpr const char *UserAgent = "User-Agent";
+} // namespace Header
+
+namespace Cookie::SameSite {
+static constexpr const char *Strict = "Strict";
+static constexpr const char *Lax = "Lax";
+static constexpr const char *None = "None";
+} // namespace Cookie::SameSite
+
+/**
+ * @brief build a cookie string out of the given parameter.
+ *
+ * @param name cookie name
+ * @param value cookie value
+ * @param httpOnly http only attribute
+ * @param domain domain scope
+ * @param path path scope
+ * @param expires expire date
+ * @param same_site same site attribute
+ * @return std::string
+ */
+std::string
+buildCookieString(std::string_view name, std::string_view value,
+                  bool httpOnly = false, std::string_view domain = "",
+                  std::string_view path = "", std::string_view expires = "",
+                  std::string_view same_site = Cookie::SameSite::Strict);
+
 /**
  * @brief get the name of a numeric status code as string
  *
@@ -86,15 +121,6 @@ enum class StatusCode {
  * @return std::string
  */
 std::string StatusCodeToString(StatusCode code);
-
-namespace Header {
-static constexpr const char *Cookie = "Cookie";
-static constexpr const char *Connection = "Connection";
-static constexpr const char *ContentLength = "Content-Length";
-static constexpr const char *ContentType = "Content-Type";
-static constexpr const char *Host = "Host";
-static constexpr const char *UserAgent = "User-Agent";
-} // namespace Header
 
 /**
  * @brief Transparent string hasher
@@ -125,12 +151,21 @@ using StringMap =
 std::size_t findGetParameter(std::string_view path) noexcept;
 
 /**
- * @brief modify a path
+ * @brief extract the get parameter from a path
  *
  * @param http_path
  * @return StringMap
  */
 StringMap extractGetParameter(std::string_view http_path) noexcept;
+
+/**
+ * @brief extract the cookies from a cookie header string and return them as
+ * string map
+ *
+ * @param cookie_string
+ * @return StringMap
+ */
+StringMap extractCookies(const std::string_view &cookie_string) noexcept;
 
 /**
  * @brief Base HTTP Object
@@ -306,6 +341,13 @@ public:
   const std::string &getPath() const noexcept;
 
   /**
+   * @brief Get the http request cookies as string map
+   *
+   * @return StringMap
+   */
+  StringMap getCookies() const noexcept;
+
+  /**
    * @brief Set the Request Method
    *
    * @param method http request method
@@ -391,6 +433,50 @@ public:
    * @param code http status code
    */
   void setStatusCode(StatusCode code) noexcept;
+
+  /**
+   * @brief Set a session cookie with the given parameter. Assign an empty
+   * string if you don't want to use them. Webli cookies are secure by default
+   * because Webli does not support HTTP without TLS.
+   *
+   * @warning Because Webli uses a hashmap only 1 set-cookie operation is
+   * supported atm :c
+   *
+   * @param name cookie name
+   * @param value cookie value
+   * @param httpOnly make cookie only usable in http requests
+   * @param domain_scope domain scope
+   * @param path_scope path scope
+   * @param same_site same site attribute
+   */
+  void
+  setCookie(std::string_view name, std::string_view value, bool httpOnly = true,
+            std::string_view domain_scope = "",
+            std::string_view path_scope = "",
+            std::string_view same_site = Cookie::SameSite::Strict) noexcept;
+
+  /**
+   * @brief Set a cookie that expires with the given parameter. Assign an empty
+   * string if you don't want to use them. Webli cookies are secure by default
+   * because Webli does not support HTTP without TLS.
+   *
+   * @warning Because Webli uses a hashmap only 1 set-cookie operation is
+   * supported atm :c
+   *
+   * @param name cookie name
+   * @param value cookie value
+   * @param expires date and time the cookie expires
+   * @param httpOnly make cookie only usable in http requests
+   * @param domain_scope domain scope
+   * @param path_scope path scope
+   * @param same_site same site attribute
+   */
+  void
+  setCookie(std::string_view name, std::string_view value,
+            std::chrono::time_point<std::chrono::system_clock> expires,
+            bool httpOnly = true, std::string_view domain_scope = "",
+            std::string_view path_scope = "",
+            std::string_view same_site = Cookie::SameSite::Strict) noexcept;
 
   /**
    * @brief build the http response to a string

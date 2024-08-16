@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
+#include <iomanip>
 #include <string>
 
 #include <webli/exceptions.hpp>
@@ -139,6 +141,45 @@ std::string StatusCodeToString(StatusCode code) {
   }
 }
 
+std::string buildCookieString(std::string_view name, std::string_view value,
+                              bool httpOnly, std::string_view domain,
+                              std::string_view path, std::string_view expires,
+                              std::string_view same_site) {
+  std::string buffer;
+
+  if (name.empty() || value.empty()) {
+    return "";
+  }
+
+  buffer.append(std::format("{}={}; Secure", name, value));
+
+  if (httpOnly) {
+    buffer.append("; HttpOnly");
+  }
+
+  if (!domain.empty()) {
+    buffer.append("; Domain=");
+    buffer.append(domain);
+  }
+
+  if (!path.empty()) {
+    buffer.append("; Path=");
+    buffer.append(path);
+  }
+
+  if (!expires.empty()) {
+    buffer.append("; Expires=");
+    buffer.append(expires);
+  }
+
+  if (!same_site.empty()) {
+    buffer.append("; SameSite=");
+    buffer.append(same_site);
+  }
+
+  return buffer;
+}
+
 std::size_t findGetParameter(std::string_view path) noexcept {
   return path.find_first_of('?');
 }
@@ -183,6 +224,48 @@ StringMap extractGetParameter(std::string_view http_path) noexcept {
   }
 
   return get_parameter;
+}
+
+StringMap extractCookies(const std::string_view &cookie_string) noexcept {
+  StringMap cookies;
+
+  // copy string view to avoid modifing the input
+  std::string_view cookie_str = cookie_string;
+
+  while (!cookie_str.empty()) {
+    auto param_end = cookie_str.find_first_of('=');
+    if (param_end == std::string::npos || param_end == 0) {
+      return {};
+    }
+
+    auto key = cookie_str.substr(0, param_end);
+
+    ++param_end;
+    if (param_end >= cookie_str.size()) {
+      return {};
+    }
+
+    cookie_str.remove_prefix(param_end);
+
+    // ; followed by a space indicates there are more values
+    auto value_end = cookie_str.find_first_of(';');
+    auto value_del = cookie_str.find_first_of(' ');
+    if (value_end == std::string::npos && value_del == std::string::npos) {
+      cookies[std::string(key)] = cookie_str.substr(0, cookie_str.size());
+      return cookies;
+    }
+
+    if (value_end >= value_del || value_del != (value_end + 1)) {
+      return {};
+    }
+
+    cookies[std::string(key)] = cookie_str.substr(0, value_end);
+
+    // remove "; "
+    cookie_str.remove_prefix(value_end + 2);
+  }
+
+  return cookies;
 }
 
 Object::Object(const Http::StringMap &header, const std::string &body,
@@ -282,6 +365,10 @@ void Request::setMethod(const std::string &method) noexcept {
   this->method = method;
 }
 
+StringMap Request::getCookies() const noexcept {
+  return extractCookies(this->getHeader(Header::Cookie));
+}
+
 void Request::setPath(const std::string &path) noexcept { this->path = path; }
 
 std::string Request::build() const noexcept {
@@ -348,6 +435,42 @@ StatusCode Response::getStatusCode() const noexcept {
 
 void Response::setStatusCode(StatusCode code) noexcept {
   this->status_code = code;
+}
+
+void Response::setCookie(std::string_view name, std::string_view value,
+                         bool httpOnly, std::string_view domain_scope,
+                         std::string_view path_scope,
+                         std::string_view same_site) noexcept {
+  auto cookie_str = buildCookieString(name, value, httpOnly, domain_scope,
+                                      path_scope, same_site);
+  if (cookie_str.empty()) {
+    return;
+  }
+
+  this->setHeader(Header::SetCookie, cookie_str);
+}
+
+void Response::setCookie(
+    std::string_view name, std::string_view value,
+    std::chrono::time_point<std::chrono::system_clock> expires, bool httpOnly,
+    std::string_view domain_scope, std::string_view path_scope,
+    std::string_view same_site) noexcept {
+  auto expire_time = std::chrono::system_clock::to_time_t(expires);
+
+  std::stringstream expire_str;
+
+  struct tm local_time;
+  gmtime_r(&expire_time, &local_time);
+
+  expire_str << std::put_time(&local_time, "%a, %d %b %Y %T GMT");
+
+  auto cookie_str = buildCookieString(name, value, httpOnly, domain_scope,
+                                      path_scope, expire_str.str(), same_site);
+  if (cookie_str.empty()) {
+    return;
+  }
+
+  this->setHeader(Header::SetCookie, cookie_str);
 }
 
 std::string Response::build() const noexcept {
