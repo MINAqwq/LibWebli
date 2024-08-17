@@ -8,13 +8,14 @@
  *
  */
 
+#include <webli/con.hpp>
 #include <webli/http.hpp>
 #include <webli/server.hpp>
 
 int main() {
   W::Router router;
 
-  router.get("/", [](const W::Http::Request &req,
+  router.get("/", [](const W::Con &con, const W::Http::Request &req,
                      std::shared_ptr<W::Http::Response> res) {
     nlohmann::json data;
     data["version"] = 1;
@@ -23,7 +24,7 @@ int main() {
     res->setBodyJson(data);
   });
 
-  router.get("/echo", [](const W::Http::Request &req,
+  router.get("/echo", [](const W::Con &con, const W::Http::Request &req,
                          std::shared_ptr<W::Http::Response> res) {
     nlohmann::json data;
 

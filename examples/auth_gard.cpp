@@ -17,12 +17,13 @@
  * response from the exception will be send to the client.
  */
 
+#include <webli/con.hpp>
 #include <webli/exceptions.hpp>
 #include <webli/http.hpp>
 #include <webli/router.hpp>
 #include <webli/server.hpp>
 
-void isAdmin(const W::Http::Request &req,
+void isAdmin(const W::Con &con, const W::Http::Request &req,
              std::shared_ptr<W::Http::Response> res) {
   auto token = req.getHeader("Token");
   if (token.empty() || token != "$1234%") {
@@ -33,7 +34,7 @@ void isAdmin(const W::Http::Request &req,
 int main() {
   W::Router router;
 
-  router.get("/", [](const W::Http::Request &req,
+  router.get("/", [](const W::Con &con, const W::Http::Request &req,
                      std::shared_ptr<W::Http::Response> res) {
     res->setHeader(W::Http::Header::ContentType, "text/html");
     res->setBody("<h1>Hallu</h1><p>Das ist eine coole seite</p>");
@@ -41,7 +42,7 @@ int main() {
 
   router.get("/admin",
              {{isAdmin},
-              {[](const W::Http::Request &req,
+              {[](const W::Con &con, const W::Http::Request &req,
                   std::shared_ptr<W::Http::Response> res) {
                 res->setHeader(W::Http::Header::ContentType, "text/html");
                 res->setBody(
