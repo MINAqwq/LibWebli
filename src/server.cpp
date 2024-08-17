@@ -1,7 +1,7 @@
 // Copyright 2024 Mina
 
-#include "webli/router.hpp"
-#include <arpa/inet.h>
+#include <webli/router.hpp>
+
 #include <array>
 #include <cstdlib>
 #include <cstring>
@@ -24,9 +24,9 @@ void sigpipeHandler(int) {
   return;
 }
 
-Server::Server(const Router &router)
-    : sd(socket(AF_INET, SOCK_STREAM, 0)), router(router),
-      ctx(SSL_CTX_new(TLS_server_method())) {
+Server::Server(const Router &router, std::size_t buffer_size)
+    : sd(socket(AF_INET, SOCK_STREAM, 0)), buffer_size(buffer_size),
+      router(router), ctx(SSL_CTX_new(TLS_server_method())) {
   if ((this->sd == -1) || (!(this->ctx))) {
     perror("[Webli] Server");
     std::exit(EXIT_FAILURE);
@@ -87,21 +87,23 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
       continue;
     }
 
-    auto t = std::jthread(Server::handle_con, client_sd, this);
+    // make explicit copy of addr to new thread
+    auto t = std::jthread(Server::handle_con, client_sd, addr.sin_addr, this);
     t.detach();
   }
 }
 
-void Server::handle_con(int client_sd, Server *server) {
-  auto buffer = std::make_unique<std::array<std::uint8_t, 2024>>();
+void Server::handle_con(int client_sd, struct in_addr address, Server *server) {
+  auto buffer = std::vector<std::uint8_t>();
+  buffer.resize(2048);
   std::stringstream stream{};
 
   try {
-    auto con = std::make_shared<Con>(client_sd, server->ctx);
+    auto con = Con(client_sd, address, server->ctx);
 
-    con->read(buffer->data(), 2048);
-    stream.write(reinterpret_cast<char *>(buffer->data()), buffer->size());
-    buffer.reset();
+    con.read(buffer.data(), static_cast<int>(buffer.size()));
+    stream.write(reinterpret_cast<char *>(buffer.data()), buffer.size());
+    buffer.clear();
 
     Http::Request req_buffer{stream};
 
@@ -112,14 +114,15 @@ void Server::handle_con(int client_sd, Server *server) {
       const auto &handler_vec = server->router.getHandler(
           req_buffer.getMethod(), req_buffer.getPath());
       for (const auto &handler : handler_vec) {
-        handler(req_buffer, resp_buffer);
+        handler(con, req_buffer, resp_buffer);
       }
     } catch (WebException::HttpException &e) {
       *resp_buffer = e.getResponse();
     }
 
     auto resp_str = resp_buffer->build();
-    con->write((void *)resp_str.c_str(), resp_str.size());
+    con.write(reinterpret_cast<const std::uint8_t *>(resp_str.c_str()),
+              static_cast<int>(resp_str.size()));
 
     std::lock_guard guard(server->print_lock);
     std::cerr << req_buffer.getMethod() << "\t"

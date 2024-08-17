@@ -21,7 +21,7 @@ public:
    *
    * @param router Router containing path handler
    */
-  explicit Server(const Router &router);
+  explicit Server(const Router &router, std::size_t buffer_size = 2048);
 
   /**
    * @brief Destroy the Server object
@@ -51,13 +51,17 @@ public:
    * @brief Internal subroutine used for new connection threads.
    *
    * @param client_sd
+   * @param address
    * @param server
    */
-  static void handle_con(int client_sd, Server *server);
+  static void handle_con(int client_sd, struct in_addr address, Server *server);
 
 private:
   /** @brief socket descriptor */
   int sd;
+
+  /** @brief server first read buffer size */
+  std::size_t buffer_size;
 
   /**
    * @brief byte that indicates that the server is running.

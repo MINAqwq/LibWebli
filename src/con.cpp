@@ -7,7 +7,8 @@
 #include <unistd.h>
 
 namespace W {
-Con::Con(int sd, SSL_CTX *ctx) : sd(sd), ssl(SSL_new(ctx)) {
+Con::Con(int sd, struct in_addr address, SSL_CTX *ctx)
+    : sd(sd), address(address), ssl(SSL_new(ctx)) {
 
   SSL_set_fd(this->ssl, this->sd);
 
@@ -23,7 +24,7 @@ Con::~Con() {
   this->close();
 }
 
-std::size_t Con::write(void *data, std::size_t data_size) const {
+std::size_t Con::write(const std::uint8_t *data, int data_size) const {
   int ret;
 
   ret = SSL_write(this->ssl, data, data_size);
@@ -35,7 +36,7 @@ std::size_t Con::write(void *data, std::size_t data_size) const {
   return ret;
 }
 
-std::size_t Con::read(void *buffer, std::size_t buffer_size) const {
+std::size_t Con::read(std::uint8_t *buffer, int buffer_size) const {
   int ret;
 
   ret = SSL_read(this->ssl, buffer, buffer_size);
@@ -46,6 +47,8 @@ std::size_t Con::read(void *buffer, std::size_t buffer_size) const {
 
   return ret;
 }
+
+struct in_addr Con::getAddress() { return this->address; }
 
 void Con::close() noexcept {
   SSL_free(this->ssl);
