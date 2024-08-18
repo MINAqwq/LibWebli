@@ -403,7 +403,7 @@ public:
    * @param body http body
    * @param version http version
    */
-  Response(StatusCode status_code, Http::StringMap header,
+  Response(StatusCode status_code, const Http::StringMap &header,
            const std::string &body, const std::string &version = "HTTP/1.1");
 
   /**

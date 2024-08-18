@@ -332,12 +332,12 @@ void Object::parseHeader(std::stringstream &data) {
     }
 
     auto pos = line.find_first_of(':');
-    if (pos == std::string::npos || (pos + 2) >= line.size()) {
+    if (pos == std::string::npos) {
       throw Exception("malformed request");
     }
 
     key = line.substr(0, pos);
-    value = line.substr(pos + 2);
+    value = (pos + 2) >= line.size() ? "" : line.substr(pos + 2);
     this->setHeader(key, value);
   }
 }
@@ -348,7 +348,7 @@ void Object::parseBody(std::stringstream &data) {
 
 Request::Request() : Object() {}
 
-Response::Response(StatusCode status_code, Http::StringMap header,
+Response::Response(StatusCode status_code, const Http::StringMap &header,
                    const std::string &body, const std::string &version)
     : Object(header, body, version), status_code(status_code) {}
 
