@@ -131,6 +131,8 @@ void Server::handle_con(int client_sd, struct in_addr address, Server *server) {
 
   } catch (Exception &e) {
     std::cerr << e.getMessage() << "\n";
+  } catch (const std::exception &e) {
+    std::cerr << "std::exception: " << e.what() << "\n";
   }
 }
 } // namespace W
