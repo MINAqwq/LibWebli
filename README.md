@@ -25,6 +25,7 @@ Here is a list of the current and planned features.
 - - [X] Responses
 - - [ ] HEAD
 - - [ ] OPTIONS
+- - [X] Cookies
 - [ ] Router
 - - [X] Static Routes
 - - [X] Custom Methods
