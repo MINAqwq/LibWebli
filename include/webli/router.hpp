@@ -17,8 +17,8 @@ namespace W {
  * @brief Typedef for user request handler function prototype
  *
  */
-using HttpUserHandler = std::function<void(const Con &, const Http::Request &,
-                                           std::shared_ptr<Http::Response>)>;
+using HttpUserHandler =
+    std::function<void(const Http::Request &, std::shared_ptr<Http::Response>)>;
 
 /**
  * @brief HTTP Router

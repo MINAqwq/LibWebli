@@ -114,7 +114,7 @@ void Server::handle_con(int client_sd, struct in_addr address, Server *server) {
       const auto &handler_vec = server->router.getHandler(
           req_buffer.getMethod(), req_buffer.getPath());
       for (const auto &handler : handler_vec) {
-        handler(con, req_buffer, resp_buffer);
+        handler(req_buffer, resp_buffer);
       }
     } catch (WebException::HttpException &e) {
       *resp_buffer = e.getResponse();
