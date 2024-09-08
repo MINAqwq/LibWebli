@@ -95,7 +95,7 @@ void Server::listen(std::string_view interface, std::uint16_t port) {
 
 void Server::handle_con(int client_sd, struct in_addr address, Server *server) {
   auto buffer = std::vector<std::uint8_t>();
-  buffer.resize(2048);
+  buffer.resize(server->buffer_size);
   std::stringstream stream{};
 
   try {
