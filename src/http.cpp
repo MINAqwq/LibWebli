@@ -327,13 +327,13 @@ void Object::parseHeader(std::stringstream &data) {
   while (!data.bad()) {
     std::getline(data, line, '\r');
     data.get();
-    if (line.empty()) {
+    if (line.empty() || line.c_str()[0] == 0) {
       break;
     }
 
     auto pos = line.find_first_of(':');
     if (pos == std::string::npos) {
-      throw Exception("malformed request");
+      throw Exception("malformed request (parseHeader)");
     }
 
     key = line.substr(0, pos);
