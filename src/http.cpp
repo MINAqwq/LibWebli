@@ -348,9 +348,10 @@ void Object::parseBody(std::stringstream &data) {
 
 Request::Request() : Object() {}
 
-Response::Response(StatusCode status_code, const Http::StringMap &header,
-                   const std::string &body, const std::string &version)
-    : Object(header, body, version), status_code(status_code) {}
+Request::Request(const std::string &method, const std::string &path,
+                 const Http::StringMap &header, const std::string &body,
+                 const std::string &version)
+    : Object(header, body, version), method(method), path(path) {}
 
 Request::Request(std::stringstream &data) : Object() {
   this->parseFirstLine(data);
@@ -424,6 +425,11 @@ void Request::parseFirstLine(std::stringstream &data) {
 }
 
 Response::Response() : Object() {}
+
+Response::Response(StatusCode status_code, const Http::StringMap &header,
+                   const std::string &body, const std::string &version)
+    : Object(header, body, version), status_code(status_code) {}
+
 Response::Response(std::stringstream &data) : Object() {
   this->parseFirstLine(data);
   this->parse(data);
