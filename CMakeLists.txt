@@ -10,14 +10,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(dep/json)
 
-add_library(webli SHARED
+set(WEBLI_SRC
 	src/con.cpp
 	src/dotenv.cpp
 	src/http.cpp
 	src/router.cpp
 	src/server.cpp
-	src/storage.cpp
-	src/webclient.cpp
+	src/storage.cpp)
+
+if (${WEBLI_CLIENT})
+	set(WEBLI_SRC ${WEBLI_SRC} src/webclient.cpp)
+endif ()
+
+add_library(webli SHARED
+	${WEBLI_SRC}
 )
 
 target_include_directories(webli PRIVATE ./include ./dep/json/include)
