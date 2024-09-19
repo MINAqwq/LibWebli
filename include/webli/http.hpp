@@ -123,15 +123,19 @@ buildCookieString(std::string_view name, std::string_view value,
 std::string StatusCodeToString(StatusCode code);
 
 /**
- * @brief Transparent string hasher
+ * @brief string hasher
  *
  */
 struct StringHash {
+  using hash_type = std::hash<std::string_view>;
   using is_transparent = void;
 
-  std::size_t operator()(std::string_view sv) const {
-    std::hash<std::string_view> hasher;
-    return hasher(sv);
+  std::size_t operator()(const char *str) const { return hash_type{}(str); }
+  std::size_t operator()(std::string_view str) const {
+    return hash_type{}(str);
+  }
+  std::size_t operator()(std::string const &str) const {
+    return hash_type{}(str);
   }
 };
 
@@ -313,7 +317,20 @@ public:
   Request();
 
   /**
-   * @brief Construct a new HTTP Request  based on the input data
+   * @brief Construct a new HTTP Request based on the parameter
+   *
+   * @param method http method
+   * @param path path on server
+   * @param header http header
+   * @param body body data
+   * @param version http version
+   */
+  Request(const std::string &method, const std::string &path,
+          const Http::StringMap &header, const std::string &body,
+          const std::string &version = "HTTP/1.1");
+
+  /**
+   * @brief Construct a new HTTP Request based on the input data
    *
    * @param data http string stream
    * @throws W::Exception on failure
