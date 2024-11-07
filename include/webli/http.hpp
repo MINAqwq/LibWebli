@@ -88,6 +88,10 @@ static constexpr const char *ContentType = "Content-Type";
 static constexpr const char *Host = "Host";
 static constexpr const char *SetCookie = "Set-Cookie";
 static constexpr const char *UserAgent = "User-Agent";
+static constexpr const char *Upgrade = "Upgrade";
+static constexpr const char *WsKey = "Sec-WebSocket-Key";
+static constexpr const char *WsVer = "Sec-WebSocket-Version";
+static constexpr const char *WsAccept = "Sec-WebSocket-Accept";
 } // namespace Header
 
 namespace Cookie::SameSite {

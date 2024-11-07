@@ -43,6 +43,7 @@ Here is a list of the current and planned features.
 - - [ ] HEAD
 - - [ ] OPTIONS
 - - [x] Cookies
+- [x] Websocket
 - [ ] Router
 - - [x] Static Routes
 - - [x] Custom Methods

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <webli/con.hpp>
+#include <webli/exceptions.hpp>
 #include <webli/router.hpp>
 
 #include <cstdint>
@@ -47,6 +48,7 @@ public:
    */
   void listen(std::string_view interface, std::uint16_t port);
 
+private:
   /**
    * @brief Internal subroutine used for new connection threads.
    *
@@ -56,7 +58,17 @@ public:
    */
   static void handle_con(int client_sd, struct in_addr address, Server *server);
 
-private:
+  /**
+   * @brief Internal subroutine used to upgrade a http request to a websocket
+   * tunnel
+   *
+   * @param con
+   * @param path
+   * @param e
+   */
+  void handle_ws(const Con &con, std::string_view path,
+                 WebException::UpgradeToWebsocket &e);
+
   /** @brief socket descriptor */
   int sd;
 

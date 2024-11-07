@@ -2,11 +2,11 @@
 
 #include <webli/router.hpp>
 
-#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <openssl/err.h>
 #include <signal.h>
 #include <sstream>
@@ -116,6 +116,9 @@ void Server::handle_con(int client_sd, struct in_addr address, Server *server) {
       for (const auto &handler : handler_vec) {
         handler(req_buffer, resp_buffer);
       }
+    } catch (WebException::UpgradeToWebsocket &u) {
+      server->handle_ws(con, req_buffer.getPath(), u);
+      return;
     } catch (WebException::HttpException &e) {
       *resp_buffer = e.getResponse();
     }
@@ -129,10 +132,37 @@ void Server::handle_con(int client_sd, struct in_addr address, Server *server) {
               << static_cast<int>(resp_buffer->getStatusCode()) << " | "
               << req_buffer.getPath() << "\n";
 
-  } catch (Exception &e) {
+  } catch (const Exception &e) {
     std::cerr << e.getMessage() << "\n";
   } catch (const std::exception &e) {
     std::cerr << "std::exception: " << e.what() << "\n";
+  }
+}
+
+void Server::handle_ws(const Con &con, std::string_view path,
+                       WebException::UpgradeToWebsocket &e) {
+  auto resp_str = e.getResponse().build();
+  con.write(reinterpret_cast<const std::uint8_t *>(resp_str.c_str()),
+            static_cast<int>(resp_str.size()));
+
+  std::unique_lock guard(this->print_lock);
+  std::cerr << "WSS\t" << static_cast<int>(e.getResponse().getStatusCode())
+            << " | " << path << "\n";
+  guard.unlock();
+
+  auto ws = std::make_shared<WebsocketConnection>(con, e.getHandler());
+
+  if (const auto &post_handler = e.getPostHandler();
+      post_handler != nullptr && !post_handler(ws)) {
+
+    // close connection if post handler returns false
+    return;
+  }
+
+  ws->process();
+
+  if (const auto &close_handler = e.getCloseHandler()) {
+    close_handler();
   }
 }
 } // namespace W

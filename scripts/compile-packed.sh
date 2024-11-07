@@ -6,6 +6,6 @@ if [ $# -eq 0 ]; then
 fi
 
 echo "[WebLI] compiling...";
-c++ -O2 -ggdb -std=c++20 "$@" src/* -I include/ -I dep/json/include/ -lssl -lcrypto -o webli-packed.out;
+c++ -O2 -ggdb -std=c++20 "$@" src/* -I include/ -I dep/json/include/ -I dep/base64/include -lssl -lcrypto -o webli-packed.out;
 echo "[WebLI] done!";
 exit 0;
