@@ -142,6 +142,22 @@ public:
               const std::vector<HttpUserHandler> &handler);
 
   /**
+   * @brief register a group to redirect requests to another router
+   *
+   * E.g. when this router with the group "/v1" gets a request to "/v1/version",
+   * the router registered under the group will get "/version" to process.
+   *
+   * Groups have priority over normal routes.
+   *
+   * From a performance perspective it's better to use router that only hold
+   * groups and router that only hold routes. Avoid mixing them.
+   *
+   * @param route http route
+   * @param router pointer to sub router
+   */
+  void group(std::string_view route, Router *router);
+
+  /**
    * @brief Get the HttpUserHandler Vector registered under method +
    * route
    *
@@ -157,6 +173,10 @@ private:
   std::unordered_map<std::string, std::vector<HttpUserHandler>,
                      Http::StringHash, std::equal_to<>>
       map;
+
+  /** @brief hash map containing router pointer */
+  std::unordered_map<std::string, Router *, Http::StringHash, std::equal_to<>>
+      groups;
 };
 
 } // namespace W
